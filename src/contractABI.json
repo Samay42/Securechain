@@ -1,0 +1,91 @@
+[
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "bytes",
+                "name": "encryptedCid",
+                "type": "bytes"
+            },
+            {
+                "indexed": false,
+                "internalType": "string",
+                "name": "fileName",
+                "type": "string"
+            },
+            {
+                "indexed": false,
+                "internalType": "string",
+                "name": "fileType",
+                "type": "string"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "uploader",
+                "type": "address"
+            }
+        ],
+        "name": "FileUploaded",
+        "type": "event"
+    },
+    {
+        "inputs": [],
+        "name": "getMyFiles",
+        "outputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "bytes",
+                        "name": "encryptedCid",
+                        "type": "bytes"
+                    },
+                    {
+                        "internalType": "string",
+                        "name": "fileName",
+                        "type": "string"
+                    },
+                    {
+                        "internalType": "string",
+                        "name": "fileType",
+                        "type": "string"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "uploader",
+                        "type": "address"
+                    }
+                ],
+                "internalType": "struct EncryptedIPFSStorage.EncryptedFile[]",
+                "name": "",
+                "type": "tuple[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes",
+                "name": "_encryptedCid",
+                "type": "bytes"
+            },
+            {
+                "internalType": "string",
+                "name": "_fileName",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "_fileType",
+                "type": "string"
+            }
+        ],
+        "name": "uploadFile",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    }
+]
