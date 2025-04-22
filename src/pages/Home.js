@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { uploadFile, generateKey, encryptCID } from "../api";
 
 const Home = () => {
   const [file, setFile] = useState(null);
@@ -25,32 +26,33 @@ const Home = () => {
 
     try {
       // Upload file to backend
-      const uploadResponse = await axios.post("http://localhost:5000/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const uploadResponse = await uploadFile(formData);
 
-      if (!uploadResponse.data.success) {
-        alert("Upload failed: " + uploadResponse.data.error);
+      if (!uploadResponse.success) {
+        alert("Upload failed: " + uploadResponse.error);
         setLoading(false);
         return;
       }
 
       // Generate Encryption Key
-      const keyResponse = await axios.get("http://localhost:5000/generate-key");
-      const generatedKey = keyResponse.data.key;
+      const keyResponse = await generateKey();
+      if (!keyResponse.success) {
+        alert("Key generation failed: " + keyResponse.error);
+        setLoading(false);
+        return;
+      }
+      const generatedKey = keyResponse.key;
       setKey(generatedKey);
-
       // Encrypt CID
-      const encryptResponse = await axios.post("http://localhost:5000/encrypt", {
-        cid: uploadResponse.data.ipfsHash,
-        key: generatedKey,
-      });
 
-      if (encryptResponse.data.success) {
-        setEncryptedCid(encryptResponse.data.encryptedCID);
+      const cid = uploadResponse.ipfsHash;
+      const encryptResponse = await encryptCID(cid, generatedKey);
+
+      if (encryptResponse.success) {
+        setEncryptedCid(encryptResponse.encryptedCID);
         alert("File uploaded and encrypted successfully!");
       } else {
-        alert("Encryption failed: " + encryptResponse.data.error);
+        alert("Encryption failed: " + encryptResponse.error);
       }
     } catch (error) {
       console.error("Error:", error);
