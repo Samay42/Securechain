@@ -7,7 +7,7 @@ import axios from 'axios';
 import crypto from 'crypto';
 import cors from 'cors';
 import FormData from 'form-data';
-import { ethers } from 'ethers';
+// import { ethers } from 'ethers';
 import bodyParser from 'body-parser';
 
 // Fix '__dirname' in ES Modules
