@@ -49,6 +49,8 @@ const encryptCID = (cid, key) => {
   const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(key, 'hex'), iv);
   let encrypted = cipher.update(cid, 'utf8', 'hex');
   encrypted += cipher.final('hex');
+  console.log(`Encrypted CID: ${encrypted}`);
+
   return encrypted;
 };
 
@@ -67,7 +69,9 @@ const decryptCID = (encryptedCID, key) => {
 // -------------------------
 app.post('/encrypt', (req, res) => {
   try {
+    console.log(req.body);
     const { cid, key } = req.body;
+    console.log("Encrypting CID:", cid, "with key:", key);
     if (!cid || !key) return res.status(400).json({ error: "CID and key are required" });
 
     const encryptedCID = encryptCID(cid, key);

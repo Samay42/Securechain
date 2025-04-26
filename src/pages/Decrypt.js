@@ -10,7 +10,7 @@ const Decrypt = () => {
     if (!encryptedCID || !key) return alert("Please enter values.");
     try {
       const response = await decryptCID(encryptedCID, key);
-      setDecryptedCID(response.data.decryptedCID);
+      setDecryptedCID(response.decryptedCID);
     } catch (error) {
       console.error(error);
       alert("Decryption failed. Check your key.");
