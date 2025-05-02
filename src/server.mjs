@@ -9,6 +9,11 @@ import cors from 'cors';
 import FormData from 'form-data';
 // import { ethers } from 'ethers';
 import bodyParser from 'body-parser';
+import mongoose from 'mongoose';
+import { Validation } from './components/validation.js';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import User from "./userDetails.js";
 
 // Fix '__dirname' in ES Modules
 const __filename = fileURLToPath(import.meta.url);
@@ -31,6 +36,19 @@ app.use(cors());
 // Multer: Use Memory Storage
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
+
+const JWT_SECRET = "codekarkarkethakgyahuneedaarhihai000";
+const mongoUrl = "mongodb+srv://samay42:Secure%40123@secure-chain.viabph1.mongodb.net/";
+
+mongoose
+  .connect(mongoUrl, {
+    useNewUrlParser: true,
+  })
+  .then(() => {
+    console.log("Connected to database");
+  })
+  .catch((e) => console.log(e));
+
 
 // -------------------------
 // ROOT ROUTE
@@ -150,6 +168,53 @@ app.post('/retrieve', async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: "Error retrieving file", details: error.message });
   }
+});
+
+app.post("/register", async (req, res) => {
+  const { email, password, confirm_password } = req.body;
+  // console.log(req.body);
+
+  const errors = await Validation({ email, password, confirm_password});
+  // console.log(errors);
+  if (Object.keys(errors).length === 0) {
+    
+    
+    try {
+        const oldUser = await User.findOne({ email });
+        
+        if (oldUser) {
+            return res.json({ error: "Email already exists" });
+        }
+        const encryptedPassword = await bcrypt.hash(password, 10);
+        await User.create({
+            email,
+            password: encryptedPassword,
+        });
+        res.json({ status: "ok" });
+    } catch (error) {
+        res.json({ error: errors });
+    }
+}else{
+    return res.json({ error: errors });
+}
+});
+
+app.post("/login-user", async (req, res) => {
+  const { email, password } = req.body;
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    return res.json({ error: "User not found" });
+  }
+  if (await bcrypt.compare(password, user.password)) {
+    const token = jwt.sign({}, JWT_SECRET);
+    if (res.status(201)) {
+      return res.json({ status: "ok", data: token });
+    } else {
+      return res.json({ error: "error" });
+    }
+  }
+  res.json({ status: "error", error: "Invalid Password" });
 });
 
 // -------------------------
