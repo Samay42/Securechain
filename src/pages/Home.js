@@ -7,6 +7,8 @@ const Home = () => {
   const [key, setKey] = useState("");
   const [encryptedCid, setEncryptedCid] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
 
   // Handle File Selection
   const handleFileChange = (event) => {
@@ -16,7 +18,9 @@ const Home = () => {
   // Upload File & Encrypt CID
   const handleUploadAndEncrypt = async () => {
     if (!file) {
-      alert("Please select a file first!");
+      // alert("Please select a file first!");
+      setError("Please select a file first!");
+      setSuccess(null);
       return;
     }
 
@@ -29,16 +33,20 @@ const Home = () => {
       const uploadResponse = await uploadFile(formData);
 
       if (!uploadResponse.success) {
-        alert("Upload failed: " + uploadResponse.error);
+        // alert("Upload failed: " + uploadResponse.error);
         setLoading(false);
+        setError(uploadResponse.error);
+        setSuccess(null);
         return;
       }
 
       // Generate Encryption Key
       const keyResponse = await generateKey();
       if (!keyResponse.success) {
-        alert("Key generation failed: " + keyResponse.error);
+        // alert("Key generation failed: " + keyResponse.error);
         setLoading(false);
+        setError(keyResponse.error);
+        setSuccess(null);
         return;
       }
       const generatedKey = keyResponse.key;
@@ -50,13 +58,25 @@ const Home = () => {
 
       if (encryptResponse.success) {
         setEncryptedCid(encryptResponse.encryptedCID);
-        alert("File uploaded and encrypted successfully!");
+        // alert("File uploaded and encrypted successfully!");
+        setError(null);
+        setSuccess("File uploaded and encrypted successfully!");
       } else {
-        alert("Encryption failed: " + encryptResponse.error);
+        // alert("Encryption failed: " + encryptResponse.error);
+        setError(encryptResponse.error);
+        setSuccess(null);
       }
     } catch (error) {
-      console.error("Error:", error);
-      alert("Something went wrong!");
+      console.error("Error:", error.response.data);
+      if (error.response.data.error === "File size exceeds 100MB limit") {
+        // alert("File size exceeds 100MB limit. Please upload a smaller file.");
+        setError("File size exceeds 100MB limit. Please upload a smaller file.");
+        setSuccess(null);
+      } else{
+        // alert("Something went wrong!");
+        setError("Something went wrong!");
+        setSuccess(null);
+      }
     } finally {
       setLoading(false);
     }
@@ -65,11 +85,21 @@ const Home = () => {
   return (
     <div className="container mt-4">
       <h2>Upload & Encrypt Your File</h2>
-
+      {/* File Upload Form */}
       {/* File Upload */}
       <div className="mb-3">
         <input type="file" onChange={handleFileChange} className="form-control" />
       </div>
+      {error?(
+        <div className="alert alert-danger" role="alert">
+          {error}
+        </div>
+      ) : null}
+      {success?(
+        <div className="alert alert-success" role="alert">
+          {success}
+        </div>
+      ) : null}
       <button className="btn btn-primary" onClick={handleUploadAndEncrypt} disabled={loading}>
         {loading ? "Processing..." : "Upload & Encrypt"}
       </button>
