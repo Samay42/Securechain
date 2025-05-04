@@ -4,8 +4,10 @@ import "./Login.css";
 // import Homepage from "./Homepage";
 import { useNavigate } from "react-router-dom";
 
-export function signOut() {
+export function signOut(history) {
   window.localStorage.clear();
+  history("/");
+  window.location.reload();
 }
 
 function Login() {
@@ -43,6 +45,7 @@ function Login() {
           window.localStorage.setItem("IsLoggedIn", true);
           window.localStorage.setItem("token", data.data);
           history("/home");
+          window.location.reload();
         } else if (data.error === "User not found") {
           alert("User not found");
         } else if (data.error === "Invalid Password") {
@@ -97,10 +100,9 @@ function Login() {
         if (data.error === "Email already exists") {
           alert("User Already Exists");
         } else if (data.status === "ok") {
-          alert('Registration Succesfull')
+          alert('Registration Succesfull, please login');
           console.log(data, "userRegister");
-          window.localStorage.setItem("IsLoggedIn", true);
-          history("/home");
+          window.location.reload();
         } else {
           alert("Invalid Credentials");
           setErrors(data.error);
@@ -114,6 +116,22 @@ function Login() {
       <section id="login">
         <div className="log_container">
           <input type="checkbox" id="check" />
+          <div className="brand">
+            <div className="brandLogo">
+            <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="url(#greenGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock text-emerald-400 h-6 w-6 animate-pulse-subtle">
+              <defs>
+                <linearGradient id="greenGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#79C96C" />
+                  <stop offset="50%" stop-color="#fff" />
+                  <stop offset="100%" stop-color="#009579" />
+                </linearGradient>
+              </defs>
+              <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            </div>
+            <h1 className="bName"><span className="brandSpan">Secure</span> Chain <span className="brandSpan2">Storage</span></h1>
+          </div>
           <div className="login l_s_form">
             <div className="auth_page">
               <header>Login</header>

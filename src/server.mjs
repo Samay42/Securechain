@@ -35,7 +35,10 @@ app.use(cors());
 
 // Multer: Use Memory Storage
 const storage = multer.memoryStorage();
-const upload = multer({ storage });
+const upload = multer({ 
+  storage,
+  limits: { fileSize: 100 * 1024 * 1024 },
+ });
 
 const JWT_SECRET = "codekarkarkethakgyahuneedaarhihai000";
 const mongoUrl = "mongodb+srv://samay42:Secure%40123@secure-chain.viabph1.mongodb.net/";
@@ -67,8 +70,6 @@ const encryptCID = (cid, key) => {
   const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(key, 'hex'), iv);
   let encrypted = cipher.update(cid, 'utf8', 'hex');
   encrypted += cipher.final('hex');
-  console.log(`Encrypted CID: ${encrypted}`);
-
   return encrypted;
 };
 
@@ -87,13 +88,10 @@ const decryptCID = (encryptedCID, key) => {
 // -------------------------
 app.post('/encrypt', (req, res) => {
   try {
-    console.log(req.body);
     const { cid, key } = req.body;
-    console.log("Encrypting CID:", cid, "with key:", key);
     if (!cid || !key) return res.status(400).json({ error: "CID and key are required" });
 
     const encryptedCID = encryptCID(cid, key);
-    console.log(`CID encrypted: ${encryptedCID}`);
     res.json({ success: true, encryptedCID });
   } catch (error) {
     res.status(500).json({ error: "Encryption failed", details: error.message });
@@ -109,7 +107,6 @@ app.post('/decrypt', (req, res) => {
     if (!encryptedCID || !key) return res.status(400).json({ error: "Encrypted CID and key are required" });
 
     const decryptedCID = decryptCID(encryptedCID, key);
-    console.log(`CID decrypted: ${decryptedCID}`);
     res.json({ success: true, decryptedCID });
   } catch (error) {
     res.status(500).json({ error: "Decryption failed", details: error.message });
@@ -121,38 +118,50 @@ app.post('/decrypt', (req, res) => {
 // -------------------------
 app.get('/generate-key', (req, res) => {
   const key = generateKey();
-  console.log(`New key generated: ${key}`);
   res.json({ success: true, key });
 });
 
 // -------------------------
 // FILE UPLOAD TO PINATA
 // -------------------------
-app.post('/upload', upload.single('file'), async (req, res) => {
-  try {
-    if (!req.file) return res.status(400).json({ success: false, error: "No file uploaded" });
+app.post('/upload', (req, res) => {
+  upload.single('file')(req, res, async (err) => {
+    if (err instanceof multer.MulterError) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(413).json({ success: false, error: "File size exceeds 100MB limit" });
+      }
+      return res.status(400).json({ success: false, error: err.message });
+    } else if (err) {
+      return res.status(500).json({ success: false, error: "Unexpected upload error", details: err.message });
+    }
 
-    const { PINATA_API_KEY, PINATA_SECRET_API_KEY } = process.env;
-    if (!PINATA_API_KEY || !PINATA_SECRET_API_KEY) throw new Error("Missing Pinata API keys");
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: "No file uploaded" });
+    }
 
-    const formData = new FormData();
-    formData.append('file', req.file.buffer, { filename: req.file.originalname });
+    try {
+      const { PINATA_API_KEY, PINATA_SECRET_API_KEY } = process.env;
+      if (!PINATA_API_KEY || !PINATA_SECRET_API_KEY) throw new Error("Missing Pinata API keys");
 
-    const response = await axios.post('https://api.pinata.cloud/pinning/pinFileToIPFS', formData, {
-      headers: {
-        ...formData.getHeaders(),
-        'pinata_api_key': PINATA_API_KEY,
-        'pinata_secret_api_key': PINATA_SECRET_API_KEY
-      },
-    });
+      const formData = new FormData();
+      formData.append('file', req.file.buffer, { filename: req.file.originalname });
 
-    console.log(`File uploaded. IPFS Hash: ${response.data.IpfsHash}`);
-    res.json({ success: true, ipfsHash: response.data.IpfsHash });
-  } catch (error) {
-    console.error("Upload error:", error.response ? error.response.data : error.message);
-    res.status(500).json({ success: false, error: error.message });
-  }
+      const response = await axios.post('https://api.pinata.cloud/pinning/pinFileToIPFS', formData, {
+        headers: {
+          ...formData.getHeaders(),
+          'pinata_api_key': PINATA_API_KEY,
+          'pinata_secret_api_key': PINATA_SECRET_API_KEY
+        },
+      });
+
+      res.json({ success: true, ipfsHash: response.data.IpfsHash });
+    } catch (error) {
+      console.log("Upload error:", error.response ? error.response.data : error.message);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
 });
+
 
 // -------------------------
 // RETRIEVE FILE FROM BLOCKCHAIN
@@ -163,7 +172,6 @@ app.post('/retrieve', async (req, res) => {
     if (!encryptedCID || !key) return res.status(400).json({ error: "Encrypted CID and key are required" });
 
     const decryptedCID = decryptCID(encryptedCID, key);
-    console.log(`Retrieved CID: ${decryptedCID}`);
     res.json({ success: true, cid: decryptedCID });
   } catch (error) {
     res.status(500).json({ error: "Error retrieving file", details: error.message });
@@ -172,13 +180,9 @@ app.post('/retrieve', async (req, res) => {
 
 app.post("/register", async (req, res) => {
   const { email, password, confirm_password } = req.body;
-  // console.log(req.body);
 
   const errors = await Validation({ email, password, confirm_password});
-  // console.log(errors);
   if (Object.keys(errors).length === 0) {
-    
-    
     try {
         const oldUser = await User.findOne({ email });
         
@@ -194,9 +198,9 @@ app.post("/register", async (req, res) => {
     } catch (error) {
         res.json({ error: errors });
     }
-}else{
+  } else {
     return res.json({ error: errors });
-}
+  }
 });
 
 app.post("/login-user", async (req, res) => {
@@ -215,6 +219,17 @@ app.post("/login-user", async (req, res) => {
     }
   }
   res.json({ status: "error", error: "Invalid Password" });
+});
+
+// Error-Handling Middleware for Multer
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ success: false, error: "File size exceeds 100MB limit" });
+    }
+    return res.status(400).json({ success: false, error: err.message });
+  }
+  next(err); // Pass other errors to the default error handler
 });
 
 // -------------------------

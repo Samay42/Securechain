@@ -17,11 +17,13 @@ const Retrieval = () => {
       <button className="btn btn-primary mt-2" onClick={handleRetrieve}>Retrieve</button>
       
       {fileUrl && (
-        <div>
-          <h4>File:</h4>
-          <img src={fileUrl} alt="Loading" className="" />
-        </div>
-      )}
+  <div>
+    <h4>File:</h4>
+      <a href={fileUrl} target="_blank" rel="noopener noreferrer">
+        File
+      </a>
+  </div>
+)}
     </div>
   );
 };
