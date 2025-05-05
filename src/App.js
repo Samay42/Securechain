@@ -27,7 +27,6 @@ function App() {
             <Route path="/home" element={<Home />} />
             <Route path="/decrypt" element={<Decrypt />} />
             <Route path="/retrieval" element={<Retrieval />} />
-            <Route path="/" element={<Login />} />
           </Routes>
         </div>
       ) : (

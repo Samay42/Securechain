@@ -12,6 +12,7 @@ export function signOut(history) {
 
 function Login() {
   const history = useNavigate();
+  const API_URL = process.env.REACT_APP_API_URL;
 
   const [loginValue, setLogin] = useState({
     loginEmail: "",
@@ -24,7 +25,7 @@ function Login() {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    fetch("http://localhost:5000/login-user", {
+    fetch(`${API_URL}/login-user`, {
       method: "POST",
       crossDomain: true,
       headers: {
@@ -79,7 +80,7 @@ function Login() {
   const handleSubmit = (e) => {
     e.preventDefault();
     // setErrors(Validation(values));
-    fetch("http://localhost:5000/register", {
+    fetch(`${API_URL}/register`, {
       method: "POST",
       crossDomain: true,
       headers: {
